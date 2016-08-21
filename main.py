@@ -41,6 +41,13 @@ if __name__ == '__main__':
 
     generate_MA_Graph(diff_list, ma_days)
 
+    ts = ana.seasonal_decompose(5)
+    ts.plot()
+    #plt.plot(ts.observed)
+    #plt.plot(ts.trend)
+    #plt.plot(ts.seasonal)
+    #plt.plot(ts.resid)
+    plt.show()
+
 #    price, ma, diff = ana.calc_Diff_from_MA()
 #    print('25days:  price: ' + str(price) + ' ma: ' + str(ma) + ' diff: ' + str(diff))
-

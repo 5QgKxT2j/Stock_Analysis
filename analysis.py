@@ -2,6 +2,7 @@
 # coding = utf-8
 
 import pandas as pd
+from statsmodels.tsa.seasonal import seasonal_decompose
 
 class Analysis:
     def __init__(self, h_prices, ndays):
@@ -33,6 +34,9 @@ class Analysis:
         diff_rate_list = (self.df_prices.ix[:, 'close'] - ma_list[:]) /  ma_list[:]
         return diff_rate_list
 
+    def seasonal_decompose(self,freq):
+        df = self.df_prices.set_index('date')
+        return seasonal_decompose(df.close,freq=freq)
+
 if __name__ == '__main__':
     pass
-
