@@ -1,38 +1,27 @@
-#!/usr/bin/python3.5
+#!/usr/bin/python
 # coding = utf-8
 
 import pandas as pd
 from statsmodels.tsa.seasonal import seasonal_decompose
 
 class Analysis:
-    def __init__(self, h_prices, ndays):
-        d_data = {'date':[], 'open':[], 'high':[], 'low':[], 'close':[], 'volume':[]}
-        for l in h_prices:
-            d_data['date'].append(l.date)
-            d_data['open'].append(l.open)
-            d_data['high'].append(l.high)
-            d_data['low'].append(l.low)
-            d_data['close'].append(l.close)
-            d_data['volume'].append(l.volume)
-        self.df_prices = pd.DataFrame(d_data)
+    def __init__(self, df_prices, ndays):
+        self.df_prices = df_prices
         self.ndays = ndays
 
     def calc_MA(self):
-        return self.df_prices.ix[:,'close'].rolling(center=False, window=self.ndays).mean().dropna().reset_index(drop = True) #Nanを除外して0から再index
-
+        df = self.df_prices.set_index('date')
+        return df.close.rolling(center=False, window=self.ndays).mean()
     def calc_EM(self):
         pass
 
-    def calc_Diff_from_MA(self):
-        latest_ma = self.calc_MA().ix[0]
-        latest_price = self.df_prices.ix[0, 'close']
-        diff_rate = (latest_price - latest_ma) / latest_ma
-        return latest_price, latest_ma, diff_rate
-
     def Dist_of_Diff_form_MA(self):
         ma_list = self.calc_MA()
-        diff_rate_list = (self.df_prices.ix[:, 'close'] - ma_list[:]) /  ma_list[:]
+        df = self.df_prices.set_index('date')
+        diff_rate_list = (df.close - ma_list) /  ma_list
+#        print(diff_rate_list)
         return diff_rate_list
+
 
     def seasonal_decompose(self,freq):
         df = self.df_prices.set_index('date')
