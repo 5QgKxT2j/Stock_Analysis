@@ -12,8 +12,11 @@ class Analysis:
     def calc_MA(self):
         df = self.df_prices.set_index('date')
         return df.close.rolling(center=False, window=self.ndays).mean()
+
+
     def calc_EM(self):
         pass
+
 
     def Dist_of_Diff_form_MA(self):
         ma_list = self.calc_MA()
