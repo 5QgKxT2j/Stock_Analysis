@@ -9,9 +9,9 @@ class Analysis:
         self.df_prices = df_prices
         self.ndays = ndays
 
-    def calc_MA(self):
-        df = self.df_prices.set_index('date')
-        return df.close.rolling(center=False, window=self.ndays).mean()
+    def _calc_MA(self):
+#        df = self.df_prices.set_index('date')
+        return self.df_prices.close.rolling(center=False, window=self.ndays).mean()
 
 
     def calc_EM(self):
@@ -19,11 +19,11 @@ class Analysis:
 
 
     def Dist_of_Diff_form_MA(self):
-        ma_list = self.calc_MA()
-        df = self.df_prices.set_index('date')
-        diff_rate_list = (df.close - ma_list) /  ma_list
-#        print(diff_rate_list)
-        return diff_rate_list
+        ma_list = self._calc_MA()
+#        df = self.df_prices.set_index('date')
+        diff = (self.df_prices.close - ma_list) /  ma_list
+        diff = diff.rename('diff_{0}ma'.format(self.ndays))
+        return diff
 
 
     def seasonal_decompose(self,freq):

@@ -12,7 +12,7 @@ class DB():
     def __init__(self, code):
         self.code = code
 
-        dbname = "stock.db"
+        dbname = "stock.sqlite3"
         self.connection = sqlite3.connect(dbname)
         self.cursor = self.connection.cursor()
 
@@ -21,22 +21,36 @@ class DB():
         check_table = 'select name from sqlite_master where type="table" and name="code_{code}"' # テーブルの存在確認
         cur = self.cursor.execute(check_table.format(code=self.code))
 
-        if cur.fetchone(): # tableが存在する場合、最新の日付をreturn
-            print('The table exists')
+        if cur.fetchone(): # tableが存在する場合、差分をDBに書き込み
+            print('The table code_{code} exists'.format(code=self.code))
             select = 'select date from code_{code} order by date desc limit 1'.format(code=self.code)
             dtime = dt.datetime.strptime(self.cursor.execute(select).fetchone()[0], '%Y-%m-%d %H:%M:%S')
-            return dt.date(dtime.year, dtime.month, dtime.day)
+            latest_day =  dt.date(dtime.year, dtime.month, dtime.day)
+            s = latest_day + dt.timedelta(days=1)
+            e = dt.date.today()
+            if s < e:
+                print('get additional jsm datas')
+                self.write_additional(s, e)
 
-        else: # tableが存在しない場合、全株価取得してDBに書き込みし、文字列allをreturn
-            print('The table does not exist')
-            try:
-                h_prices = jsm.Quotes().get_historical_prices(self.code, jsm.DAILY, all=True)
-            except:
-                print("データ取得失敗")
-                h_prices = []
-
+        else: # tableが存在しない場合、全株価取得してDBに書き込み
+            print('The table code_{code} does not exist'.format(code=self.code))
+            h_prices = jsm.Quotes().get_historical_prices(self.code, jsm.DAILY, all=True)
+            data = []
+            for l in h_prices:
+                data.append((l.date, l.open, l.high, l.low, l.close, l.volume))
             create = "create table if not exists code_" + str(self.code) + "(date, open, high, low, close, volume)"
-            self.cursor.execute(create)
+            insert = 'insert into code_' + str(self.code) + '(date, open, high, low, close, volume) values (?,?,?,?,?,?)'
+            try:
+                self.cursor.execute(create)
+                self.cursor.executemany(insert, data)
+                self.connection.commit()
+            except:
+                print('DB書き込みエラー')
+
+
+    def write_additional(self, start, end):
+        try:
+            h_prices = jsm.Quotes().get_historical_prices(self.code, jsm.DAILY, start_date = start, end_date = end)
             data = []
             for l in h_prices:
                 data.append((l.date, l.open, l.high, l.low, l.close, l.volume))
@@ -46,30 +60,14 @@ class DB():
                 self.connection.commit()
             except:
                 print('DB書き込みエラー')
-            return 'all'
 
-
-    def write_additional(self, start, end):
-        h_prices = jsm.Quotes().get_historical_prices(self.code, jsm.DAILY, start_date = start, end_date = end)
-        data = []
-        for l in h_prices:
-            data.append((l.date, l.open, l.high, l.low, l.close, l.volume))
-        insert = 'insert into code_' + str(self.code) + '(date, open, high, low, close, volume) values (?,?,?,?,?,?)'
-        try:
-            self.cursor.executemany(insert, data)
-            self.connection.commit()
         except:
-            print('DB書き込みエラー')
+            print("New datas do not exist")
 
 
     def read(self, start='', end=''):
 
         res = self.write() # DBに新規株価データの書き込み
-        if not (res == 'all'):
-            s = res + dt.timedelta(days=1)
-            e = dt.date.today()
-            if s < e:
-                self.write_additional(s, e)
 
         if (not start) and (not end): # 読み込み範囲の選択がされなかった場合、全データ読み込み
             select = 'select * from code_{code} order by date'
@@ -103,8 +101,8 @@ class DB():
 
 if __name__ == '__main__':
     code = sys.argv[1]
-    db = DB(code)
-
-    start = '20160801'
-    end = '20160831'
-    res = db.read()
+    con = sqlite3.connect('brand.sqlite3')
+    cur = con.cursor()
+    for ccode in cur.execute('select ccode from brand_list').fetchall():
+        db = DB(*ccode)
+        db.read()
