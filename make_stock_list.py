@@ -15,14 +15,15 @@ if __name__ == '__main__':
         pass
     connection = sqlite3.connect(dbname)
     cursor = connection.cursor()
-    create = 'create table if not exists brand_list (ccode, market, name)'
+    create = 'create table if not exists brand_list (ccode integer, market, name)'
     cursor.execute(create)
 
     q = jsm.Quotes()
     bl = q.get_brand()
     data = []
-    for v in bl.values():
-        data.append((v.ccode, v.market, v.name))
+    for key in bl.keys():
+        for l in bl[key]:
+            data.append((l.ccode, l.market, l.name))
 
     data = sorted(data, key=itemgetter(0))
     insert = 'insert into brand_list (ccode, market, name) values (?,?,?)'

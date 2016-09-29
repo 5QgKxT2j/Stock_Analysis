@@ -10,7 +10,7 @@ class Analysis:
         self.ndays = ndays
 
     def _calc_MA(self):
-#        df = self.df_prices.set_index('date')
+        df = self.df_prices.set_index('date')
         return self.df_prices.close.rolling(center=False, window=self.ndays).mean()
 
 
