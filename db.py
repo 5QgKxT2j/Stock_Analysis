@@ -15,7 +15,8 @@ class DB():
     def __init__(self, code):
         self.code = code
         self.tbname = 'code_{0}'.format(code)
-        dbname = 'stock.sqlite3'
+        #dbname = './stock.sqlite3'
+        dbname = './stock/code_{0}.sqlite3'.format(code)
         self.con = sqlite3.connect(dbname)
         self.cur = self.con.cursor()
 
