@@ -3,3 +3,4 @@ stock.db
 __pycache__
 .ipynb_checkpoints
 figure
+stock
