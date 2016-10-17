@@ -11,6 +11,8 @@ class simple_model1():
 
     def __init__(self, stock_data, ma_days=[25]):
         self.stock_data = stock_data.set_index('date')
+
+
     def fit(self, diff_th=-0.10, inc_th=1.1, dline=20, ma_day=25, skip=0):
 
         res = []
@@ -31,9 +33,21 @@ class simple_model1():
         except:
             return None
 
+
     def predict(self):
         pass
 
-    def show(self):
+
+    def show_table(self):
 #        print(self.stock_data.iloc[:, 5:])
         print(self.stock_data)
+
+
+    def show_diff_from_MA(self, ma_day):
+        last = len(self.stock_data)-1
+        dict = {}
+        for d in ma_day:
+            col = 'Diff_from_{day}MA'.format(day=d)
+            diff = self.stock_data.ix[last, col]
+            dict[d] = diff
+        return dict

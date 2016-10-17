@@ -35,14 +35,14 @@ if __name__ == '__main__':
     l_ma_day = [25, 50, 75]
 
     m = model.simple_model1(stock_data, ma_days=l_ma_day)
+    diff_from_ma = m.show_diff_from_MA(l_ma_day)
     for diff_th, inc_th, dline, ma_day in itertools.product(l_diff_th, l_inc_th, l_dline, l_ma_day):
-#        print('diff_th:', diff_th, 'inc_th:', inc_th, 'dline:', dline, 'ma_day:', ma_day)
         r = m.fit(diff_th=diff_th, inc_th=inc_th, dline=dline, ma_day=ma_day)
-        if (not r == None) and (r[0] > 0.60):
+        if (not r == None) and (diff_from_ma[ma_day] < diff_th) and (r[0] > 0.60):
             params = diff_th, inc_th, dline, ma_day
             mes = '{ma_day}日MAから{diff_th}%乖離しているとき、{dline}日以内に株価が{inc_th}倍以上になる確率: {c_rate}(correct: {cor}, wrong: {wr})'.format(ma_day=ma_day, diff_th=diff_th, dline=dline, inc_th=inc_th, c_rate=r[0], cor=r[1], wr=r[2])
             res.append(mes)
-    m.show()
+#    m.show_table()
 
     for e in res:
         print(e)

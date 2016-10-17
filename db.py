@@ -166,4 +166,5 @@ if __name__ == '__main__':
             db.write()
     else:
         db = DB(sys.argv[1])
-        print(db.read())
+        db.write()
+#        print(db.read())
