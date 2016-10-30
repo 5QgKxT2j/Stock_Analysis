@@ -9,13 +9,13 @@ import itertools
 from database import DB
 
 class Model():
-    def __init__(self, name, code_list):
+    def __init__(self, name, code_list, debug_mode):
 
         if name == 's_model1':
 
             sm1 = simple_model1()
             for code in code_list:
-                db = DB(code) # create a DB object
+                db = DB(code, debug_mode) # create a DB object
                 data = db.read()
                 ldiff_th = [-0.2, -0.1]
                 linc_th = [1.1, 1.2]
@@ -29,7 +29,11 @@ class Model():
         elif name == 's_model2':
             pass
 
+        elif name == 'momentum':
+            pass
+
         else:
+
             print('No model found')
             sys.exit(-1)
 
@@ -56,13 +60,8 @@ class simple_model1():
             res = correct/(correct+wrong)
             if (res > 0.6):
                 print(res, correct, wrong, diff_th, inc_th, dline, ma_day)
-            return None
         except:
             return None
-
-    def show_table(self):
-        print(stock_data)
-
 
     def show_diff_from_MA(self, data, ma_day):
         last = len(data)-1

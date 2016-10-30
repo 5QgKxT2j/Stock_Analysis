@@ -32,5 +32,5 @@ if __name__ == '__main__':
         debug_mode = False
 
     model_name = args.m
-    model(model_name, code_list)
+    model(model_name, code_list, debug_mode)
 

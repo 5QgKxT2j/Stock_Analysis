@@ -12,11 +12,12 @@ import sys
 
 
 class DB():
-    def __init__(self, code):
+    def __init__(self, code, debug_mode):
         self.code = code
         dbname = './stock_data/code_{0}.sqlite3'.format(code)
         self.con = sqlite3.connect(dbname)
         self.cur = self.con.cursor()
+        self.debug_mode = debug_mode
 
     def read(self, start='', end=''):
 
@@ -46,6 +47,7 @@ class DB():
 
         else:
             print('Unexpected Error')
+            sys.exit(-1)
 
         df = psql.read_sql(select, self.con) # pandasのDataFrameの形でデータを取り出す
         return df
@@ -56,18 +58,18 @@ class DB():
         check_table = 'select name from sqlite_master where type="table" and name="stock_data"'
         c = self.cur.execute(check_table)
         if c.fetchone(): # tableが存在する場合、差分をDBに書き込み
-            print('Code {0}: The table found'.format(self.code))
+            if self.debug_mode: print('Code {0}: The table found'.format(self.code))
             select = 'select date from stock_data order by date desc limit 1'
             dtime = dt.datetime.strptime(self.cur.execute(select).fetchone()[0], '%Y-%m-%d %H:%M:%S')
             latest_day =  dt.date(dtime.year, dtime.month, dtime.day)
             s = latest_day + dt.timedelta(days=1)
             e = dt.date.today()
             if s < e:
-                print('Code {0}: Getting additional datas'.format(self.code))
+                if self.debug_mode: print('Code {0}: Getting additional datas'.format(self.code))
                 self._write_additional(s, e)
 
         else: # tableが存在しない場合、全株価取得してDBに書き込み
-            print('Code {0}: No table found'.format(self.code))
+            if self.debug_mode: print('Code {0}: No table found'.format(self.code))
             self._write_all()
 
 
@@ -77,8 +79,7 @@ class DB():
             h_prices = jsm.Quotes().get_historical_prices(self.code, jsm.DAILY, all=True)
         except:
             print('Failed: Code {0}: Cannot get a stock data from server'.format(self.code))
-
-        print('Success: Code {0}: Finish getting all data'.format(self.code))
+            sys.exit(-1)
 
         df = self._create_DF(h_prices)
         df = self._add_MA_row(df)
@@ -89,7 +90,7 @@ class DB():
             print('Failed: Code {0}: Writing to the Database'.format(self.code))
             sys.exit(-1)
 
-        print('Success: Code {0}: Writing to the Database'.format(self.code))
+        if self.debug_mode: print('Success: Code {0}: Writing to the Database'.format(self.code))
 
 
     def _write_additional(self, start, end):
@@ -97,10 +98,10 @@ class DB():
         try:
             h_prices = jsm.Quotes().get_historical_prices(self.code, jsm.DAILY, start_date = start, end_date = end)
         except:
-            print('Failed: Code {0}: Cannot get additonal stock datas from server'.format(self.code))
+            if self.debug_mode: print('Failed: Code {0}: Cannot get additonal stock datas from server (may already have all stock data)'.format(self.code))
             return None
 
-        print('Success: Code {0}: Finish getting additional datas'.format(self.code))
+        if self.debug_mode: print('Success: Code {0}: Finish getting additional datas'.format(self.code))
 
         df = self._create_DF(h_prices)
         new_data_size = len(df)
@@ -115,10 +116,10 @@ class DB():
         try:
             df.to_sql('stock_data', self.con, if_exists='append')
         except:
-            print('Failed: Code {0}: Writing to the Database'.format(self.code))
+            print('Failed: Code {0}: cannot write stock datas to the database'.format(self.code))
             sys.exit(-1)
 
-        print('Success: Code {0}: Writing to the Database'.format(self.code))
+            if self.debug_mode: print('Success: Code {0}: finished writing to the database'.format(self.code)) 
 
     def _create_DF(self, h_prices):
 
