@@ -5,8 +5,10 @@ import pandas as pd
 import sys
 import itertools
 
+
 ### import my library ###
 from database import DB
+from analyzer import class_jsm
 
 class Model():
     def __init__(self, name, code_list, debug_mode):
@@ -14,17 +16,21 @@ class Model():
         if name == 's_model1':
 
             sm1 = simple_model1()
+            jsm_obj = class_jsm()
             for code in code_list:
                 db = DB(code, debug_mode) # create a DB object
-                data = db.read()
-                ldiff_th = [-0.2, -0.1]
-                linc_th = [1.1, 1.2]
-                ldline = [20, 30]
-                lma_day = [25, 50, 75]
-                print(sm1.show_diff_from_MA(data, lma_day))
-                params = itertools.product(ldiff_th, linc_th, ldline, lma_day)
-                for a, b, c, d in params:
-                    sm1.fit(data, a, b, c, d)
+                jsm_obj.insert_Stock_Data(db=db, code=code) # write jsm datas to the Database
+                print(db.select(table='stock_data'))
+
+
+#                ldiff_th = [-0.2, -0.1]
+#                linc_th = [1.1, 1.2]
+#                ldline = [20, 30]
+#                lma_day = [25, 50, 75]
+#                print(sm1.show_diff_from_MA(data, lma_day))
+#                params = itertools.product(ldiff_th, linc_th, ldline, lma_day)
+#                for a, b, c, d in params:
+#                    sm1.fit(data, a, b, c, d)
 
         elif name == 's_model2':
             pass
