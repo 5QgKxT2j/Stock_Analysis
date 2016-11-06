@@ -48,7 +48,7 @@ class class_jsm():
         return True
 
     def jsm_to_df(self, jsm_data):
-        data = {'date':[], 'open':[], 'high':[], 'low':[], 'close':[], 'volume':[]}
+        data = {'date':[], 'open':[], 'high':[], 'low':[], 'close':[], 'volume':[], 'adj_close':[]}
         for d in jsm_data:
             data['date'].append(d.date)
             data['open'].append(d.open)
@@ -56,6 +56,7 @@ class class_jsm():
             data['low'].append(d.low)
             data['close'].append(d.close)
             data['volume'].append(d.volume)
+            data['adj_close'].append(d._adj_close)
         df_data = pd.DataFrame(data)
         df_data = df_data.drop_duplicates(subset='date')
         df_data = df_data.sort_values('date')

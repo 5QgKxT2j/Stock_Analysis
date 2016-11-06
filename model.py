@@ -25,39 +25,22 @@ class Model():
 
                 data = db.select(table='stock_data', start='2010-01-01 00:00:00')
                 date = pd.to_datetime(data['date'])
-                vol_ma = talib.SMA(np.array(data['volume'], dtype='f8'), timeperiod=25)
-                upper, middle, lower = talib.BBANDS(np.array(data['close'], dtype='f8'))
-
+                upper, middle, lower = talib.BBANDS(np.array(data['adj_close'], dtype='f8'))
 
                 plt.subplot(2, 1, 1)
-                plt.plot(date, data['close'], linewidth=0.5, label="close")
+                plt.plot(date, data['adj_close'], linewidth=0.5, label="close")
                 plt.plot(date, middle, linewidth=0.5, label="middle")
                 plt.plot(date, upper, label="upper", linewidth=0.5)
                 plt.plot(date, lower, label="lower", linewidth=0.5)
 
                 plt.legend(loc='upper left')
 
+
                 plt.subplot(2, 1, 2)
-
-                plt.plot(date, vol_ma, label="vol_ma", linewidth=0.5)
-                plt.plot(date, data['volume'], linewidth=0.5, label="volume")
-
+                rsi14 = talib.RSI(np.array(data['adj_close'], dtype='f8'), timeperiod=14)
+                plt.plot(date, rsi14, linewidth=0.5, label="rsi14")
                 plt.legend(loc='upper left')
-
-                print(type(upper))
-
-                buy = data['close'] - lower
-                sell = data['close'] - upper
-
-                nstock = 0
-
-
-#                for d in range(25, 1000, 25):
-#                    print(date[len(date)-d], sum(data['close'][len(data.index)-d:] - middle[len(data.index)-d:]) / d)
-
-
-
-#                plt.show()
+                plt.show()
 
 
         elif name == 's_model2':
