@@ -4,33 +4,61 @@
 import pandas as pd
 import sys
 import itertools
-
+from matplotlib import pyplot as plt
+import numpy as np
+import talib
 
 ### import my library ###
 from database import DB
-from analyzer import class_jsm
+from scraping_stock_data import class_jsm
+import analyzer as ana
 
 class Model():
     def __init__(self, name, code_list, debug_mode):
 
         if name == 's_model1':
 
-            sm1 = simple_model1()
             jsm_obj = class_jsm()
             for code in code_list:
                 db = DB(code, debug_mode) # create a DB object
                 jsm_obj.insert_Stock_Data(db=db, code=code) # write jsm datas to the Database
-                print(db.select(table='stock_data'))
+
+                data = db.select(table='stock_data', start='2010-01-01 00:00:00')
+                date = pd.to_datetime(data['date'])
+                vol_ma = talib.SMA(np.array(data['volume'], dtype='f8'), timeperiod=25)
+                upper, middle, lower = talib.BBANDS(np.array(data['close'], dtype='f8'))
 
 
-#                ldiff_th = [-0.2, -0.1]
-#                linc_th = [1.1, 1.2]
-#                ldline = [20, 30]
-#                lma_day = [25, 50, 75]
-#                print(sm1.show_diff_from_MA(data, lma_day))
-#                params = itertools.product(ldiff_th, linc_th, ldline, lma_day)
-#                for a, b, c, d in params:
-#                    sm1.fit(data, a, b, c, d)
+                plt.subplot(2, 1, 1)
+                plt.plot(date, data['close'], linewidth=0.5, label="close")
+                plt.plot(date, middle, linewidth=0.5, label="middle")
+                plt.plot(date, upper, label="upper", linewidth=0.5)
+                plt.plot(date, lower, label="lower", linewidth=0.5)
+
+                plt.legend(loc='upper left')
+
+                plt.subplot(2, 1, 2)
+
+                plt.plot(date, vol_ma, label="vol_ma", linewidth=0.5)
+                plt.plot(date, data['volume'], linewidth=0.5, label="volume")
+
+                plt.legend(loc='upper left')
+
+                print(type(upper))
+
+                buy = data['close'] - lower
+                sell = data['close'] - upper
+
+                nstock = 0
+
+
+#                for d in range(25, 1000, 25):
+#                    print(date[len(date)-d], sum(data['close'][len(data.index)-d:] - middle[len(data.index)-d:]) / d)
+
+
+
+#                plt.show()
+
 
         elif name == 's_model2':
             pass
@@ -43,43 +71,3 @@ class Model():
             print('No model found')
             sys.exit(-1)
 
-
-class simple_model1():
-
-    def __init__(self):
-        pass
-    def fit(self, stock_data, diff_th=-0.10, inc_th=1.1, dline=20, ma_day=25):
-
-        res = []
-        correct, wrong = 0, 0
-        col = 'Diff_from_{day}MA'.format(day=ma_day)
-
-        for i in range(len(stock_data)-1):
-            if stock_data.ix[i, col] <= diff_th:
-                if stock_data.ix[i, 'close'] * inc_th < max(stock_data.ix[i:i+dline, 'close']):
-                    correct += 1
-                    inc = max(stock_data.ix[i:i+dline, 'close']) / stock_data.ix[i, 'close']
-                    res.append((stock_data.ix[i].name, inc))
-                else:
-                    wrong += 1
-        try:
-            res = correct/(correct+wrong)
-            if (res > 0.6):
-                print(res, correct, wrong, diff_th, inc_th, dline, ma_day)
-        except:
-            return None
-
-    def show_diff_from_MA(self, data, ma_day):
-        last = len(data)-1
-        dict = {}
-        for d in ma_day:
-            col = 'Diff_from_{day}MA'.format(day=d)
-            diff = data.ix[last, col]
-            dict[d] = diff
-        return dict
-
-
-
-class Momentum():
-    def __init__(self):
-        pass

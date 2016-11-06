@@ -1,8 +1,6 @@
 #!/usr/bin/python
 # coding = utf-8
 
-MA_DAY = [25, 50, 75]
-
 import sqlite3
 import datetime as dt
 import pandas as pd
@@ -28,11 +26,11 @@ class DB():
             if (not start) and (not end): # 範囲選択がされなかった場合、全データ読み込み
                 sql_select = 'select distinct {col} from {table} order by date'.format(table=table, col=','.join(col))
             elif start and (not end): # 開始日のみ指定
-                sql_select = 'select distinct {col} from {table} where date >= {s} order by date'.format(table=table, col=','.join(col), s=start)
+                sql_select = 'select distinct {col} from {table} where date >= "{s}" order by date'.format(table=table, col=','.join(col), s=start)
             elif (not start) and end: # 終了日のみ指定
-                sql_select = 'select distinct {col} from {table} where date <= {e} order by date'.format(table=table, col=','.join(col), e=end)
+                sql_select = 'select distinct {col} from {table} where date <= "{e}" order by date'.format(table=table, col=','.join(col), e=end)
             elif start and end: # 取得開始日と終了日を共に指定
-                sql_select = 'select distinct * from stock_data where date between {s} and {e} order by date'.format(table=table, col=','.join(col), s=start, e=end)
+                sql_select = 'select distinct * from stock_data where date between "{s}" and "{e}" order by date'.format(table=table, col=','.join(col), s=start, e=end)
 
         return psql.read_sql(sql_select, self.con)
 
@@ -71,12 +69,3 @@ class DB():
 
 if __name__ == '__main__':
     pass
-##    if sys.argv[1] == 'all':
-##        con = sqlite3.connect('brand.sqlite3')
-##        cur = con.cursor()
-##        for ccode in cur.execute('select ccode from brand_list').fetchall():
-##            db = DB(*ccode)
-##            db.write()
-##    else:
-##        db = DB(sys.argv[1])
-##        db._write()
