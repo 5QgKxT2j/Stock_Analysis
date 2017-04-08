@@ -200,8 +200,8 @@ if __name__ == '__main__':
     #print("get_price('9433')")
     #print(pj.get_price('9433'))
 
-    print("get_historical_prices('1301')", pj.DAILY, datetime.date(2016,1,1),datetime.date(2016,12,31))
-    print(pj.get_historical_prices('1301', pj.DAILY, datetime.date(2016,1,1), datetime.date(2016,12,31)))
+    #print("get_historical_prices('1301')", pj.DAILY, datetime.date(2016,1,4),datetime.date(2016,12,30))
+    #print(pj.get_historical_prices('1301', pj.DAILY, datetime.date(2016,1,4), datetime.date(2016,12,30)))
  
     #print("get_finance('9433')")
     #print(pj.get_finance('9433'))   

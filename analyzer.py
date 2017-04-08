@@ -1,15 +1,35 @@
 #!/usr/bin/python
 # coding = utf-8
 
-import jsm
-import pandas as pd
-import datetime as dt
 
 ### import my library ###
-from database import DB
+import pandasjsm as pj
 
 
+class analyser(object):
+    '''分析データ入力と結果出力のインタフェース
+    '''
+    def __init__(self):
+        pass
+    
+    @classmethod
+    def momentum(cls, df):
+        '''モメンタムから分析
+        '''
+        pass
+    
+    @classmethod
+    def ma_deviation(cls, df):
+        '''移動平均乖離率から分析
+        '''
+        pass
 
+    @classmethod
+    def garch(cls, df):
+        '''garchモデル推定から分析
+        '''
+
+'''
 class class_jsm():
     def __init__(self):
         pass
@@ -108,3 +128,4 @@ class Diff_from_MA():
 
         return pd.concat([df, *ma_list, *diff_rate_list], axis=1)
 
+'''
