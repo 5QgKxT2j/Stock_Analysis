@@ -23,6 +23,7 @@ class pandasjsm(jsm.Quotes):
         """現在の株価を取得
         ccode: 証券コード
         """
+        self.get_historical_prices(ccode, all=True)
         p = super().get_price(ccode)
         return p
 
@@ -76,6 +77,9 @@ class pandasjsm(jsm.Quotes):
                 jsm_start_date = datetime.date.fromtimestamp(time.mktime(jsm_end_date.timetuple()) - 2592000)
             else:
                 jsm_start_date = start_date
+        
+        #print('jsm_start_date = {jsm_start_date}'.format(jsm_start_date = jsm_start_date))
+        #print('jsm_end_date = {jsm_end_date}'.format(jsm_end_date = jsm_end_date))
 
         # エラー処理？？
 
@@ -93,8 +97,7 @@ class pandasjsm(jsm.Quotes):
                     data = None
             if jsm_end_date > db_end_date:
                 try:
-                    #data = super().get_historical_prices(ccode, range_type, db_end_date + datetime.timedelta(1), jsm_end_date)
-                    data = super().get_historical_prices(ccode, range_type, db_end_date, jsm_end_date)
+                    data = super().get_historical_prices(ccode, range_type, db_end_date + datetime.timedelta(1), jsm_end_date)
                     self.__insert_pricedata(data, table_name, connect)
                 except:
                     data = None

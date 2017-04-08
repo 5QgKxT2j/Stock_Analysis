@@ -1,22 +1,40 @@
 #!/usr/bin/python
 # coding = utf-8
 
-
 ### import my library ###
-from pandasjsm import pandasjsm as pj
+from pandasjsm import pandasjsm
+import talib as ta
+import pandas as pd
+import numpy as np
 
 
-class analyser(object):
+class analyzer(object):
     '''分析データ入力と結果出力のインタフェース
     '''
     def __init__(self):
         pass
     
     @classmethod
-    def momentum(cls, df):
+    def momentum(cls, df, column='adj_close', period=250):
         '''モメンタムから分析
         '''
-        pass
+
+        momentum = ta.MOM(df[column].values.astype(np.float64), period)
+        # buy: 1, sell: -1, nutral: 0
+        signal = [0 for row in range(momentum.size)]
+        for i in range(momentum.size):
+            if i > 0:
+                if momentum[i-1] < 0 and momentum[i] > 0:
+                    signal[i] = 1
+                if momentum[i-1] > 0 and momentum[i] < 0:
+                    signal[i] = -1
+
+        result = pd.DataFrame(momentum, index=df.index, columns=['momentum'])
+        result['signal'] = signal
+
+        result['asset'] = cls.__eval_performance(df, signal)
+
+        return pd.concat([df, result], axis=1)
     
     @classmethod
     def ma_deviation(cls, df):
@@ -28,62 +46,43 @@ class analyser(object):
     def garch(cls, df):
         '''garchモデル推定から分析
         '''
-
-'''
-class class_jsm():
-    def __init__(self):
         pass
 
-    def insert_Stock_Data(self, db, code, loop=False):
+    @classmethod
+    def __eval_performance(self, df, signal, budget=10000):
+        '''シグナルにあわせた売買でのパフォーマンスを計算
+        '''
+        size = len(signal)
+        cash = [None for i in range(size)]
+        position = [None for i in range(size)]
+        asset = [None for i in range(size)]
+        cash[0] = budget
+        position[0] = 0
+        for i, (index, row) in enumerate(df.iterrows()):
+            if i > 0:
+                cash[i] = cash[i-1]
+                position[i] = position[i-1]
+                if signal[i] == 1:
+                    #buy
+                    amount = cash[i] // row['adj_close']
+                    position[i] += amount
+                    cash[i] -= row['adj_close'] * amount
+                elif signal[i] == -1:
+                    #sell
+                    cash[i] += row['adj_close'] * position[i-1]
+                    position[i] = 0
+            asset[i] = cash[i] + position[i] * row['adj_close']
+        
+        return asset
 
-        if db.check_table(table='stock_data'):
-            try:
-                jsm_data = jsm.Quotes().get_historical_prices(code, jsm.DAILY, all=True)
-            except:
-                return False
-        else:
-            try:
-                raw = 'order by date desc limit 1'
-                dtime = db.select(table='stock_data', col=('date',), raw_sentence=raw)
-            except:
-                if loop:
-                    return False
-                # The table exists, but no data is inserted (maybe caused by a force process kill)
-                db.drop_table(table='stock_data')
-                return self.insert_Stock_Data(db, code, loop=True)
+if __name__ == '__main__':
+    pj = pandasjsm()
+    df = pj.get_historical_prices('9433', all=True)
+    result = analyzer.momentum(df)
+    print(result)
+    pass
 
-            dtime = dt.datetime.strptime(dtime['date'][0], '%Y-%m-%d %H:%M:%S')
-            latest_day =  dt.date(dtime.year, dtime.month, dtime.day)
-            s = latest_day + dt.timedelta(days=1)
-            e = dt.date.today()
-            if s < e:
-                try:
-                    jsm_data = jsm.Quotes().get_historical_prices(code, jsm.DAILY, start_date=s, end_date=e)
-                except:
-                    return False
-            else:
-                return False
-
-        df_data = self.jsm_to_df(jsm_data)
-        db.insert(table='stock_data', data=df_data)
-        return True
-
-    def jsm_to_df(self, jsm_data):
-        data = {'date':[], 'open':[], 'high':[], 'low':[], 'close':[], 'volume':[]}
-        for d in jsm_data:
-            data['date'].append(d.date)
-            data['open'].append(d.open)
-            data['high'].append(d.high)
-            data['low'].append(d.low)
-            data['close'].append(d.close)
-            data['volume'].append(d.volume)
-        df_data = pd.DataFrame(data)
-        df_data = df_data.drop_duplicates(subset='date')
-        df_data = df_data.sort_values('date')
-
-        return df_data
-
-
+'''
 class Diff_from_MA():
 
     def __init__():
@@ -97,22 +96,6 @@ class Diff_from_MA():
         df = pd.concat([data4ma, df], axis=0)
         df = self._add_MA_row(df)
         df = df.iloc[len(df.index)-new_data_size:]
-
-    def _create_DF(self, h_prices):
-        data = {'date':[], 'open':[], 'high':[], 'low':[], 'close':[], 'volume':[]}
-        for l in h_prices:
-            data['date'].append(l.date)
-            data['open'].append(l.open)
-            data['high'].append(l.high)
-            data['low'].append(l.low)
-            data['close'].append(l.close)
-            data['volume'].append(l.volume)
-
-        df = pd.DataFrame(data)
-        df = df.drop_duplicates(subset='date')
-        df = df.sort_values('date')
-        df = df.set_index('date')
-        return df
 
     def _add_MA_row(self, df):
 
