@@ -100,8 +100,8 @@ class pandasjsm(jsm.Quotes):
                     data = None
 
         # データベース読み込み
-        start = start_date - datetime.timedelta(1)
-        end = end_date + datetime.timedelta(1)
+        start = jsm_start_date - datetime.timedelta(1)
+        end = jsm_end_date + datetime.timedelta(1)
         read_sql = "select * from {table_name} where date between '{start}' and '{end}'".format(table_name = table_name, start = start.strftime('%Y-%m-%d'), end = end.strftime('%Y-%m-%d'))
         
         df = psql.read_sql(read_sql, connect)
