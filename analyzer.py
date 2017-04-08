@@ -3,7 +3,7 @@
 
 
 ### import my library ###
-import pandasjsm as pj
+from pandasjsm import pandasjsm as pj
 
 
 class analyser(object):

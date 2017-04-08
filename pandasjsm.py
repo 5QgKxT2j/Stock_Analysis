@@ -42,7 +42,7 @@ class pandasjsm(jsm.Quotes):
 
         # キャッシュデータ範囲検証
         table_name = 'code_{ccode}_{range_type}'.format(ccode=ccode, range_type=range_type)
-        print('table_name={table_name}'.format(table_name=table_name))
+        #print('table_name={table_name}'.format(table_name=table_name))
 
         start_date_sql = 'select date from {table_name} order by date limit 1'.format(table_name=table_name)
         end_date_sql = 'select date from {table_name} order by date desc limit 1'.format(table_name=table_name)
@@ -55,7 +55,7 @@ class pandasjsm(jsm.Quotes):
             db_end_date = datetime.datetime.strptime(db_end_date, '%Y-%m-%d %H:%M:%S')
             db_end_date = datetime.date(db_end_date.year, db_end_date.month, db_end_date.day)
         except Exception as e:
-            print(e)
+            #print(e)
             db_start_date = None
             db_end_date = None
         
