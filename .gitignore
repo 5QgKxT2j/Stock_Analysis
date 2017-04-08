@@ -6,3 +6,4 @@ __pycache__
 figure
 stock
 .python-version
+.DS_Store

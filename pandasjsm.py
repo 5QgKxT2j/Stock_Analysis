@@ -2,19 +2,20 @@
 # 取得データはキャッシュとしてデータベース(sqlite3)へ格納する
 
 import sqlite3
-import datetime as dt
+import datetime
+import time
 import pandas as pd
 import pandas.io.sql as psql
-import sys
 import jsm
-
-# RangeType
-DAILY = 0
-WEEKLY = 1
-MONTHLY = 2
 
 class pandasjsm(jsm.Quotes):
     """株式情報取得"""
+
+    # RangeType
+    DAILY = 0
+    WEEKLY = 1
+    MONTHLY = 2
+
     def __init__(self, path='./database/'):
         self.path = path 
 
@@ -40,51 +41,88 @@ class pandasjsm(jsm.Quotes):
         cursor = connect.cursor()
 
         # キャッシュデータ範囲検証
-        table_name = 'code_{ccode}_{range_type}'.format(ccode=ccode,range_type=range_type)
+        table_name = 'code_{ccode}_{range_type}'.format(ccode=ccode, range_type=range_type)
+        print('table_name={table_name}'.format(table_name=table_name))
 
-        ### datetime型に後で変換 ###
         start_date_sql = 'select date from {table_name} order by date limit 1'.format(table_name=table_name)
-        end_date_sql = 'select date from {table_name} order by date disc limit 1'.format(table_name=table_name)
+        end_date_sql = 'select date from {table_name} order by date desc limit 1'.format(table_name=table_name)
 
         try:
-            db_start_date = psql.read_sql(start_date_sql, connect)
-            db_end_date = psql.read_sql(end_date_sql, connect)
-        except:
+            db_start_date = psql.read_sql(start_date_sql, connect).iloc[0, 0]
+            db_start_date = datetime.datetime.strptime(db_start_date, '%Y-%m-%d %H:%M:%S')
+            db_start_date = datetime.date(db_start_date.year, db_start_date.month, db_start_date.day)
+            db_end_date = psql.read_sql(end_date_sql, connect).iloc[0, 0]
+            db_end_date = datetime.datetime.strptime(db_end_date, '%Y-%m-%d %H:%M:%S')
+            db_end_date = datetime.date(db_end_date.year, db_end_date.month, db_end_date.day)
+        except Exception as e:
+            print(e)
             db_start_date = None
             db_end_date = None
-            print("キャッシュデータなし")
+        
+        #print('db_start_date = {db_start_date}'.format(db_start_date = db_start_date))
+        #print('db_end_date = {db_end_date}'.format(db_end_date = db_end_date))
+        
 
         # 要求データ範囲検証
-        if not all:
-            if start_date != None and db_start_date > start_date:
-                select_start_date = start_date
-            else: 
-                select_start_date = db_end_date
-
-            if db_end_date < end_date:
-                select_start_date = end_date
-            else:
-                select_end_date = db_start_date
-
-        # 必要データ取得
         if all:
-            jsm_data = super().get_historical_prices(ccode, range_type, None, None, all)
+            jsm_start_date = datetime.date(2000, 1, 1)
+            jsm_end_date = datetime.date.today()
         else:
-            if select_start_date == db_end_date and select_end_date == db_start_date:
-                print("全データキャッシュ済み")
-                jsm_data = None
-            else: 
-                jsm_data = super().get_historical_prices(ccode, range_type, select_start_date, select_end_date)
+            if not end_date:
+                jsm_end_date = datetime.date.today()
+            else:
+                jsm_end_date = end_date
+            if not start_date:
+                jsm_start_date = datetime.date.fromtimestamp(time.mktime(jsm_end_date.timetuple()) - 2592000)
+            else:
+                jsm_start_date = start_date
 
-        print("jsm_data")
-        print(jsm_data)
+        # エラー処理？？
 
-        # データ挿入
 
-        # DataFrame作成
+        # 必要データ取得 & データベース書き込み
+        if not db_start_date and not db_end_date:
+            data = super().get_historical_prices(ccode, range_type, jsm_start_date, jsm_end_date)
+            self.__insert_pricedata(data, table_name, connect)
+        else:
+            if jsm_start_date < db_start_date:
+                try:
+                    data = super().get_historical_prices(ccode, range_type, jsm_start_date, db_start_date - datetime.timedelta(1))
+                    self.__insert_pricedata(data, table_name, connect)
+                except:
+                    data = None
+            if jsm_end_date > db_end_date:
+                try:
+                    #data = super().get_historical_prices(ccode, range_type, db_end_date + datetime.timedelta(1), jsm_end_date)
+                    data = super().get_historical_prices(ccode, range_type, db_end_date, jsm_end_date)
+                    self.__insert_pricedata(data, table_name, connect)
+                except:
+                    data = None
 
-        p = super().get_historical_prices(ccode, range_type, start_date, end_date, all)
-        return p
+        # データベース読み込み
+        start = start_date - datetime.timedelta(1)
+        end = end_date + datetime.timedelta(1)
+        read_sql = "select * from {table_name} where date between '{start}' and '{end}'".format(table_name = table_name, start = start.strftime('%Y-%m-%d'), end = end.strftime('%Y-%m-%d'))
+        
+        df = psql.read_sql(read_sql, connect)
+        df = df.set_index('date')
+        return df
+
+    def __insert_pricedata(self, data, table_name, connect):
+        #create if not exists
+        create_sql = 'create table if not exists {table_name}(date unique, open, high, low, close, adj_close)'.format(table_name=table_name)
+        connect.execute(create_sql)
+        #insert each data
+        for dat in data:
+            insert_sql = 'insert into {table_name} values (?,?,?,?,?,?)'.format(table_name=table_name)
+            record = (dat.date, dat.open, dat.high, dat.low, dat.close, dat._adj_close)
+            try:
+                connect.execute(insert_sql, record)
+            except Exception as e:
+                print('insert error: {e}'.format(e=e))
+                
+        connect.commit()
+        return
 
     def get_finance(self, ccode):
         """財務データを取得
@@ -162,8 +200,8 @@ if __name__ == '__main__':
     #print("get_price('9433')")
     #print(pj.get_price('9433'))
 
-    print("get_historical_prices('9433')")
-    print(pj.get_historical_prices('9433'))
+    print("get_historical_prices('1301')", pj.DAILY, datetime.date(2016,1,1),datetime.date(2016,12,31))
+    print(pj.get_historical_prices('1301', pj.DAILY, datetime.date(2016,1,1), datetime.date(2016,12,31)))
  
     #print("get_finance('9433')")
     #print(pj.get_finance('9433'))   
@@ -171,4 +209,4 @@ if __name__ == '__main__':
     #print("get_brand('5250')")
     #print(pj.get_brand('5250'))
 
-    print("test")
+    pass
