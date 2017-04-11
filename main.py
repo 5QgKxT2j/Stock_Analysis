@@ -29,9 +29,9 @@ if __name__ == '__main__':
     
     start = result.index[0]
     end = result.index[len(result.index) - 1]
-    print('start = {start}, end = {end}'.format(start=start, end=end))
+    #print('start = {start}, end = {end}'.format(start=start, end=end))
 
-    result.plot(y=['adj_close','asset'])
+    result.plot(y=['adj_close', 'asset'])
     plt.savefig('./figure/momentum_{ccode}.png'.format(ccode=args.target))
     pass
 
