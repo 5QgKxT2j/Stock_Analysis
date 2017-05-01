@@ -37,6 +37,12 @@ class analyzer(object):
         return pd.concat([df, result], axis=1)
     
     @classmethod
+    def random_select(cls, df, plus = 0.1, minus = 0.05):
+        '''ランダムに銘柄を選択し、損切りor利確
+        '''
+        pass
+
+    @classmethod
     def ma_deviation(cls, df):
         '''移動平均乖離率から分析
         '''
