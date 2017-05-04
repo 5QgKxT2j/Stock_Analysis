@@ -25,14 +25,14 @@ if __name__ == '__main__':
 
     pj = pandasjsm()
     df = pj.get_historical_prices(args.target, all=True)
-    result = analyzer.momentum(df)
+    #result = analyzer.momentum(df)
     
-    start = result.index[0]
-    end = result.index[len(result.index) - 1]
+    #start = result.index[0]
+    #end = result.index[len(result.index) - 1]
     #print('start = {start}, end = {end}'.format(start=start, end=end))
 
-    result.plot(y=['adj_close', 'asset'])
-    plt.savefig('./figure/momentum_{ccode}.png'.format(ccode=args.target))
+    #result.plot(y=['adj_close', 'asset'])
+    #plt.savefig('./figure/momentum_{ccode}.png'.format(ccode=args.target))
     pass
 
 

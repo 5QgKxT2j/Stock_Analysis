@@ -1,7 +1,13 @@
-for code in `cat scripts/code.txt | head -500`
+#c=0
+for i in `cat scripts/code.txt`
 do
-	echo $code
-	python main.py $code &
-	sleep 10
+    while [ `ps -ef | grep "python main.py" | wc -l | awk '{print $1}'` -gt 10 ]
+    do
+        echo "sleep 1"
+		sleep 1
+	done
+	echo $i
+    #sleep 1 &
+    python main.py $i &
 done
 wait
