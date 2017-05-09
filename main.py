@@ -36,10 +36,11 @@ if __name__ == '__main__':
     #start = result.index[0]
     #end = result.index[len(result.index) - 1]
     #print('start = {start}, end = {end}'.format(start=start, end=end))
-
-    ax = result.plot(y=['adj_close', '25MA', '50MA', '250MA'])
-    ax2 = ax.twinx()
-    result.plot(ax = ax2, y=['25MA_deviation', '50MA_deviation', '250MA_deviation'])
+    fig, [ax1, ax2, ax3] = plt.subplots(3,1,figsize=(10,15))
+    result.plot(ax = ax1,y=['adj_close', '25MA', '50MA', '250MA'])
+    #ax2 = ax.twinx()
+    result.plot(ax = ax2, y=['momentum'])
+    result.plot(ax = ax3, y=['25MA_deviation', '50MA_deviation', '250MA_deviation'])
     plt.savefig('./figure/ma_{ccode}.png'.format(ccode=args.target))
     pass
 
