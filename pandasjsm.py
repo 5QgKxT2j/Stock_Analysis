@@ -108,6 +108,7 @@ class pandasjsm(jsm.Quotes):
         read_sql = "select * from {table_name} where date between '{start}' and '{end}'".format(table_name = table_name, start = start.strftime('%Y-%m-%d'), end = end.strftime('%Y-%m-%d'))
         
         df = psql.read_sql(read_sql, connect)
+        df['date'] = pd.to_datetime(df['date'])
         df = df.set_index('date')
         return df
 

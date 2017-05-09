@@ -36,17 +36,22 @@ class analyzer(object):
 
         return pd.concat([df, result], axis=1)
     
-    @classmethod
-    def random_select(cls, df, plus = 0.1, minus = 0.05):
-        '''ランダムに銘柄を選択し、損切りor利確
-        '''
-        pass
+#    @classmethod
+#    def random_select(cls, df, plus = 0.1, minus = 0.05):
+#        '''ランダムに銘柄を選択し、損切りor利確
+#        '''
+#        np.random.rand()
+#
+#        pass
 
     @classmethod
-    def ma_deviation(cls, df):
+    def ma_deviation(cls, df,column='adj_close' ,window=25):
         '''移動平均乖離率から分析
         '''
-        pass
+        ma = df[column].rolling(center=False, window=window).mean()
+        df['{0}MA'.format(window)] = ma
+        df['{0}MA_deviation'.format(window)] = (df[column] - ma) / ma
+        return df
 
     @classmethod
     def garch(cls, df):
