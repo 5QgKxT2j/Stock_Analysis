@@ -1,5 +1,5 @@
 stock.db
-database
+database/*
 *.sqlite3
 __pycache__
 .ipynb_checkpoints
