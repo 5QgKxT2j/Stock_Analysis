@@ -1,6 +1,7 @@
 stock.db
 database/*
 *.sqlite3
+.idea
 __pycache__
 .ipynb_checkpoints
 figure
