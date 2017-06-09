@@ -93,33 +93,3 @@ if __name__ == '__main__':
     print(result)
     pass
 
-'''
-class Diff_from_MA():
-
-    def __init__():
-        df = self._create_DF(h_prices)
-        new_data_size = len(df)
-        select = 'select distinct {rows} from stock_data order by date desc limit {num}'.format(rows='date, open, high, low, close, volume', num=(max(MA_DAY)-1))
-        data4ma = psql.read_sql(select, self.con)
-        data4ma = data4ma.drop_duplicates(subset='date')
-        data4ma = data4ma.sort_values('date')
-        data4ma = data4ma.set_index('date')
-        df = pd.concat([data4ma, df], axis=0)
-        df = self._add_MA_row(df)
-        df = df.iloc[len(df.index)-new_data_size:]
-
-    def _add_MA_row(self, df):
-
-        ma_list = []
-        diff_rate_list = []
-        for d in MA_DAY:
-            ma = df['close'].rolling(center=False, window=d).mean()
-            ma.name = '{0}MA'.format(d)
-            diff_rate = (df['close'] - ma) / ma
-            diff_rate.name = 'Diff_from_{0}MA'.format(d)
-            ma_list.append(ma)
-            diff_rate_list.append(diff_rate)
-
-        return pd.concat([df, *ma_list, *diff_rate_list], axis=1)
-
-'''
