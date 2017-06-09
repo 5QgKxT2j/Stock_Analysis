@@ -1,5 +1,5 @@
 stock.db
-database/*
+database/*.sqlite3
 *.sqlite3
 .idea
 __pycache__
