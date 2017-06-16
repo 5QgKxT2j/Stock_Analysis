@@ -34,7 +34,7 @@ if __name__ == '__main__':
     fig, [ax1, ax2, ax3] = plt.subplots(3,1,figsize=(10,15))
     df.plot(ax = ax1,y=['adj_close', '25MA', '50MA', '250MA'])
     #ax2 = ax.twinx()
-    df.plot(ax = ax2, y=['momentum'])
+    #df.plot(ax = ax2, y=['momentum'])
     df.plot(ax = ax3, y=['25MA_deviation', '50MA_deviation', '250MA_deviation'])
     plt.savefig('./figure/ma_{ccode}.png'.format(ccode=args.target))
     pass
