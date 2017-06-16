@@ -11,6 +11,7 @@ from analyzer import analyzer
 import matplotlib.pyplot as plt
 
 
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -25,7 +26,9 @@ if __name__ == '__main__':
 
     pj = pandasjsm()
     df = pj.get_historical_prices(args.target, all=True)
-    
+    # df = pj.get_historical_prices(args.target)
+    df = df['2016-01-01':]
+
     analyzer.ma_deviation(df)
     analyzer.ma_deviation(df, window=50)
     analyzer.ma_deviation(df, window=250)
@@ -34,7 +37,8 @@ if __name__ == '__main__':
     fig, [ax1, ax2, ax3] = plt.subplots(3,1,figsize=(10,15))
     df.plot(ax = ax1,y=['adj_close', '25MA', '50MA', '250MA'])
     #ax2 = ax.twinx()
-    #df.plot(ax = ax2, y=['momentum'])
+    # df.plot(ax = ax2, y=['volume'], kind='bar')
+    df.plot(ax = ax2, y=['volume'])
     df.plot(ax = ax3, y=['25MA_deviation', '50MA_deviation', '250MA_deviation'])
     plt.savefig('./figure/ma_{ccode}.png'.format(ccode=args.target))
     pass

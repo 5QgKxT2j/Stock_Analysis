@@ -114,12 +114,12 @@ class pandasjsm(jsm.Quotes):
 
     def __insert_pricedata(self, data, table_name, connect):
         #create if not exists
-        create_sql = 'create table if not exists {table_name}(date unique, open, high, low, close, adj_close)'.format(table_name=table_name)
+        create_sql = 'create table if not exists {table_name}(date unique, open, high, low, close, adj_close, volume)'.format(table_name=table_name)
         connect.execute(create_sql)
         #insert each data
         for dat in data:
-            insert_sql = 'insert into {table_name} values (?,?,?,?,?,?)'.format(table_name=table_name)
-            record = (dat.date, dat.open, dat.high, dat.low, dat.close, dat._adj_close)
+            insert_sql = 'insert into {table_name} values (?,?,?,?,?,?,?)'.format(table_name=table_name)
+            record = (dat.date, dat.open, dat.high, dat.low, dat.close, dat._adj_close, dat.volume)
             try:
                 connect.execute(insert_sql, record)
             except Exception as e:
