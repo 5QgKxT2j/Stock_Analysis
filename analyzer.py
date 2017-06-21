@@ -29,12 +29,14 @@ class analyzer(object):
                 if momentum[i-1] > 0 and momentum[i] < 0:
                     signal[i] = -1
 
-        result = pd.DataFrame(momentum, index=df.index, columns=['momentum'])
-        result['signal'] = signal
+        #result = pd.DataFrame(momentum, index=df.index, columns=['momentum'])
+        df["momentum{0}".format(period)] = momentum
+        df['signal'] = signal
 
-        result['asset'] = cls.__eval_performance(df, signal)
+        df['asset'] = cls.__eval_performance(df, signal)
 
-        return pd.concat([df, result], axis=1)
+        # return pd.concat([df, result], axis=1)
+        return df
     
 #    @classmethod
 #    def random_select(cls, df, plus = 0.1, minus = 0.05):
@@ -49,8 +51,8 @@ class analyzer(object):
         '''移動平均乖離率から分析
         '''
         ma = df[column].rolling(center=False, window=window).mean()
-        df['{0}MA'.format(window)] = ma
-        df['{0}MA_deviation'.format(window)] = (df[column] - ma) / ma
+        df['MA{0}'.format(window)] = ma
+        df['MA{0}_deviation'.format(window)] = (df[column] - ma) / ma
         return df
 
     @classmethod
