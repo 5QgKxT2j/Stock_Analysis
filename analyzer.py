@@ -29,12 +29,14 @@ class analyzer(object):
                 if momentum[i-1] > 0 and momentum[i] < 0:
                     signal[i] = -1
 
-        result = pd.DataFrame(momentum, index=df.index, columns=['momentum'])
-        result['signal'] = signal
+        #result = pd.DataFrame(momentum, index=df.index, columns=['momentum'])
+        df["momentum"] = momentum
+        df['signal'] = signal
 
-        result['asset'] = cls.__eval_performance(df, signal)
+        df['asset'] = cls.__eval_performance(df, signal)
 
-        return pd.concat([df, result], axis=1)
+        # return pd.concat([df, result], axis=1)
+        return df
     
 #    @classmethod
 #    def random_select(cls, df, plus = 0.1, minus = 0.05):

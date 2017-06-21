@@ -7,3 +7,5 @@ figure/*.png
 stock
 .python-version
 .DS_Store
+.vscode
+
