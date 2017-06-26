@@ -19,16 +19,17 @@ print("サイト名：{0}".format(driver.title)) #=> Google
 #driver.save_screenshot('test.png')
 pj = pandasjsm()
 
-
+print("KM_NOTINT")
 for tr in driver.find_elements_by_class_name("KM_NOTINT"):
     try:
         
         code = tr.find_element_by_class_name("KM_CODE").text
         deviation = tr.find_element_by_class_name("select_number").text
+        print("code = {0}, deviation = {1}".format(code,deviation))
         if float(deviation) > -15.0:
             break
         df = pj.get_historical_prices(code, start_date = datetime.date(2016,1,1))
-        #print(df.tail(1))
+        print(df.tail())
         analyzer.ma_deviation(df)
         analyzer.momentum(df, period=25)
         df["max"] = df.adj_close.rolling(window=20).max().shift(periods=-20)
@@ -48,16 +49,17 @@ for tr in driver.find_elements_by_class_name("KM_NOTINT"):
         print("NG")
         print(e)
 
-
+print("KM_TINT")
 for tr in driver.find_elements_by_class_name("KM_TINT"):
     try:
         
         code = tr.find_element_by_class_name("KM_CODE").text
         deviation = tr.find_element_by_class_name("select_number").text
+        print("code = {0}, deviation = {1}".format(code,deviation))
         if float(deviation) > -15.0:
             break
         df = pj.get_historical_prices(code, start_date = datetime.date(2016,1,1))
-        #print(df.tail(1))
+        print(df.tail())
         analyzer.ma_deviation(df)
         analyzer.momentum(df, period=25)
         df["max"] = df.adj_close.rolling(window=20).max().shift(periods=-20)
