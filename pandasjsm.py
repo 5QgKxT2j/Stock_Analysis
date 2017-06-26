@@ -67,10 +67,10 @@ class pandasjsm(jsm.Quotes):
         # 要求データ範囲検証
         if all:
             jsm_start_date = datetime.date(2000, 1, 1)
-            jsm_end_date = datetime.date.today()
+            jsm_end_date = datetime.date.today() + datetime.timedelta(days=1)
         else:
             if not end_date:
-                jsm_end_date = datetime.date.today()
+                jsm_end_date = datetime.date.today() + datetime.timedelta(days=1)
             else:
                 jsm_end_date = end_date
             if not start_date:
