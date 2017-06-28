@@ -6,7 +6,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from analyzer import analyzer
 import datetime
-
+from pprint import pprint
 
 
 options = Options()
@@ -19,6 +19,8 @@ print("サイト名：{0}".format(driver.title)) #=> Google
 #driver.save_screenshot('test.png')
 pj = pandasjsm()
 
+
+result = []
 #print("KM_NOTINT")
 for tr in driver.find_elements_by_class_name("KM_NOTINT"):
     try:
@@ -28,7 +30,7 @@ for tr in driver.find_elements_by_class_name("KM_NOTINT"):
         deviation = tr.find_element_by_class_name("select_number").text
         if float(deviation) > -15.0:
             break
-        print("code = {0}, name = {1}, deviation = {2}".format(code,name,deviation))
+        result.append({"code":code, "name":name, "deviation":deviation})
         df = pj.get_historical_prices(code, start_date = datetime.date(2016,1,1))
  #       print(df.tail())
         analyzer.ma_deviation(df)
@@ -59,7 +61,8 @@ for tr in driver.find_elements_by_class_name("KM_TINT"):
         deviation = tr.find_element_by_class_name("select_number").text
         if float(deviation) > -15.0:
             break
-        print("code = {0}, name = {1}, deviation = {2}".format(code,name,deviation))
+#        print("code = {0}, name = {1}, deviation = {2}".format(code,name,deviation))
+        result.append({"code":code, "name":name, "deviation":deviation})
         df = pj.get_historical_prices(code, start_date = datetime.date(2016,1,1))
 #        print(df.tail())
         analyzer.ma_deviation(df)
@@ -82,3 +85,7 @@ for tr in driver.find_elements_by_class_name("KM_TINT"):
         print(e)
 
 driver.quit()
+
+for item in sorted(result, key=lambda x: x['deviation'], reverse=True):
+    pprint(item)
+
