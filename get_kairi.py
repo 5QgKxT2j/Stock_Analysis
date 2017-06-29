@@ -8,7 +8,6 @@ from analyzer import analyzer
 import datetime
 from pprint import pprint
 
-
 options = Options()
 options.add_argument('--headless')
 options.add_argument('--disable-gpu')
@@ -19,6 +18,14 @@ print("サイト名：{0}".format(driver.title)) #=> Google
 #driver.save_screenshot('test.png')
 pj = pandasjsm()
 
+try:
+    blacklist = []
+    with open("./code_blacklist.txt", "r") as f:
+        for line in f.readlines():
+            if line.rstrip().isdigit():
+                blacklist.append(line.rstrip())
+except:
+    blacklist = None
 
 result = []
 #print("KM_NOTINT")
@@ -28,6 +35,8 @@ for tr in driver.find_elements_by_class_name("KM_NOTINT"):
         code = tr.find_element_by_class_name("KM_CODE").text
         name = tr.find_element_by_class_name("KM_TEXT").text
         deviation = tr.find_element_by_class_name("select_number").text
+        if code in blacklist:
+            continue
         if float(deviation) > -15.0:
             break
         result.append({"code":code, "name":name, "deviation":deviation})
@@ -59,6 +68,8 @@ for tr in driver.find_elements_by_class_name("KM_TINT"):
         code = tr.find_element_by_class_name("KM_CODE").text
         name = tr.find_element_by_class_name("KM_TEXT").text
         deviation = tr.find_element_by_class_name("select_number").text
+        if code in blacklist:
+            continue
         if float(deviation) > -15.0:
             break
 #        print("code = {0}, name = {1}, deviation = {2}".format(code,name,deviation))
