@@ -20,6 +20,7 @@ from operator import itemgetter
 import time
 from database import DB
 
+SLEEP_SEC = 10
 
 def predict_based_on_coint(code, cls_code):
     pj = pandasjsm()
@@ -34,7 +35,7 @@ def predict_based_on_coint(code, cls_code):
         if stattools.adfuller(df['adj_close'], regression='ct')[1] > 0.05:
             target_code.append(c)
 
-        time.sleep(30)
+        time.sleep(SLEEP_SEC)
 
     print('class_code={0}: Now target_list is available'.format(cls_code))
 
@@ -43,24 +44,36 @@ def predict_based_on_coint(code, cls_code):
         df1 = db.select(table='code_{0}_0'.format(c1), start='2016-01-01 00:00:00')
         db = DB(c2)
         df2 = db.select(table='code_{0}_0'.format(c2), start='2016-01-01 00:00:00')
-#        df1 = pj.get_historical_prices(c1, start_date = datetime.date(2016,1,1))
-#        df2 = pj.get_historical_prices(c2, start_date = datetime.date(2016,1,1))
-
 
         if len(df1['adj_close']) != len(df2['adj_close']):
             continue
         coint = stattools.coint(df1['adj_close'], df2['adj_close'], trend='ct')
 
-        if coint[1] < 0.05:
+#        if coint[1] < 0.05:
+        if coint[1] < 0.30:
 
-            with open('/tmp/coint.txt', 'a') as log:
-                print(c1, c2, coint, file=log)
-                model = VECM(pd.concat([df1['adj_close'], df2['adj_close']], axis=1),
+            model = VECM(pd.concat([df1['adj_close'], df2['adj_close']], axis=1),
                              deterministic="ci", seasons=4, coint_rank=1)
-                vecm_res = model.fit()
-                print(vecm_res.summary(), '\n', vecm_res.predict(steps=5), '\n',
-                      [df1.tail(1).ix[0:, 'adj_close'], df2.tail(1).ix[0:, 'adj_close']], '\n', file=log)
+            vecm_res = model.fit()
 
+            c1_latest = df1.tail(1).iloc[0]['adj_close']
+            c2_latest = df2.tail(1).iloc[0]['adj_close']
+            if (vecm_res.predict(steps=1)[0][0] - c1_latest) - (vecm_res.predict(steps=1)[0][1] - c2_latest) > 0:
+                max_profit = 0
+                close_day = 0
+                for day, predict in enumerate(vecm_res.predict(steps=5)):
+                    profit = (vecm_res.beta[0] * (predict[0] - c1_latest)) + (vecm_res.beta[1] * (predict[1] - c2_latest))
+                    if profit > max_profit:
+                        max_profit = profit
+                        close_day = day
+
+                with open('/tmp/coint.txt', 'a') as log:
+                    print('code, coint:', [c1, c2, coint[1]], '\n',
+                           vecm_res.predict(steps=5), '\n'
+                          'Latest Price:', [df1.tail(1).iloc[0]['adj_close'], df2.tail(1).iloc[0]['adj_close']], '\n'
+                          'VECM Beta:', vecm_res.beta[0], vecm_res.beta[1] , '\n'
+                          'Expected Profit:', max_profit, '\n'
+                          'Close: in', close_day+1, 'days\n' , file=log)
 
 
 connect = sqlite3.connect('brand.sqlite3')
@@ -74,7 +87,7 @@ for cc in cls_code:
     th = threading.Thread(target=predict_based_on_coint, name='th', args=(brand[brand['class_code'] == cc]['ccode'], cc))
     threads.append(th)
     th.start()
-    time.sleep(30)
+    time.sleep(SLEEP_SEC)
 
 for t in threads:
     t.join()
