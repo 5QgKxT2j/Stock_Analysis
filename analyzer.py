@@ -85,7 +85,7 @@ class analyzer(object):
                     cash[i] += row['adj_close'] * position[i-1]
                     position[i] = 0
             asset[i] = cash[i] + position[i] * row['adj_close']
-        
+
         return asset
 
 if __name__ == '__main__':

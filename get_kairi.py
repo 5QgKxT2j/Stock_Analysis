@@ -1,3 +1,7 @@
+
+import warnings
+warnings.filterwarnings('ignore', category=FutureWarning, message=r'The pandas.core.datetools')
+
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from pandasjsm import pandasjsm
@@ -39,7 +43,7 @@ def get_high_dev_code(class_name, result):
             deviation = tr.find_element_by_class_name("select_number").text
             if code in blacklist:
                 continue
-            if float(deviation) > -15.0:
+            if float(deviation) >= -20.0:
                 break
             result.append({"code":code, "name":name, "deviation":deviation})
 
@@ -62,32 +66,25 @@ for res in result:
         code = res["code"]
         deviation = res["deviation"]
         df = pj.get_historical_prices(code, start_date = datetime.date(2016,1,1))
-        analyzer.ma_deviation(df)
+        analyzer.ma_deviation(df, window=200)
         analyzer.momentum(df, period=25)
+#        analyzer.momentum(df, period=5, column='volume')
         df["max"] = df.adj_close.rolling(window=20).max().shift(periods=-20)
         df["max"] = df["max"] / df["adj_close"]
         df["min"] = df.adj_close.rolling(window=20).min().shift(periods=-20)
         df["min"] = df["min"] / df["adj_close"]
+
         fig, [ax1, ax2] = plt.subplots(2,1,figsize=(6,8))
-        df["momentum25"] = df["momentum25"] / df["adj_close"]
-        #        df.plot(ax=ax1, kind='scatter', x="momentum25", y="max", c=df.MA25_deviation, cmap="winter")
-        #        df.plot(ax=ax2, kind='scatter', x="momentum25", y="min", c=df.MA25_deviation, cmap="winter")
-        fig.suptitle("Today: deviation = {0}, momentum = {1}".format(deviation, df.tail(1).momentum25[0]))
+#        df["momentum5"] = df["momentum25"] / df.ix[0, "volume"]
+#        df["momentum25"] = df["momentum25"] / df.ix[0, "adj_close"]
 
-        df = df[df["momentum25"] <= 0].dropna()
-        df = df[df["MA25_deviation"] <= -0.15].dropna()
-        x = df["momentum25"]
-        X = np.column_stack((np.repeat(1, x.size), x))
-        model_ols = sm.OLS(df["max"], X)
-        results = model_ols.fit()
+        fig.suptitle("Today: deviation = {0}, momentum = {1}".format(df.tail(1).MA200_deviation[0], df.tail(1).momentum25[0]))
+#        fig.suptitle("Today: deviation = {0}, momentum = {1}".format(deviation, df.tail(1).momentum5[0]))
+#        df.plot(ax=ax1, kind='scatter', x="momentum5", y="max", c=df.MA25_deviation, cmap="winter", xlim=(-2, 2))
+#        df.plot(ax=ax2, kind='scatter', x="momentum5", y="min", c=df.MA25_deviation, cmap="winter", xlim=(-2, 2))
 
-        a, b = results.params
-        ax1.plot(x, a+b*x)
-        ax1.text(0, 0, "a={:8.3f}, b={:8.3f}".format(a,b))
-
-        print(results.summary())
-        df.plot(ax=ax1, kind='scatter', x="momentum25", y="max", c=df.MA25_deviation, cmap="winter")
-        df.plot(ax=ax2, kind='scatter', x="momentum25", y="min", c=df.MA25_deviation, cmap="winter")
+        df.plot(ax=ax1, kind='scatter', x="MA200_deviation", y="max", c=df.momentum25, cmap="winter")
+        df.plot(ax=ax2, kind='scatter', x="MA200_deviation", y="min", c=df.momentum25, cmap="winter")
 
         plt.savefig("./figure/{0}.png".format(code))
         plt.close()
