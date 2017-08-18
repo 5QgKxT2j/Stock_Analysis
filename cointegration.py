@@ -19,6 +19,8 @@ import sqlite3
 from operator import itemgetter
 import time
 from database import DB
+import matplotlib.pyplot as plt
+
 
 SLEEP_SEC = 2
 
@@ -67,11 +69,14 @@ def predict_based_on_coint(code, cls_code):
 
                 with open('/tmp/coint.txt', 'a') as log:
                     print('code, coint:', [c1, c2, coint[1]], '\n',
-                           vecm_res.predict(steps=5), '\n'
+                           forecast, '\n'
                           'Latest Price:', [df1.tail(1).iloc[0]['adj_close'], df2.tail(1).iloc[0]['adj_close']], '\n'
                           'VECM Beta:', vecm_res.beta[0], vecm_res.beta[1] , '\n'
                           'Expected Profit:', max_profit, '\n'
                           'Close: in', close_day+1, 'days\n' , file=log)
+                vecm_res.plot_forecast(steps=5)
+                plt.savefig("./figure/{0}-{1}.png".format(c1, c2))
+                plt.close()
 
 
 connect = sqlite3.connect('brand.sqlite3')
