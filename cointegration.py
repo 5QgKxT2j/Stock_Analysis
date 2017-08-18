@@ -20,13 +20,13 @@ from operator import itemgetter
 import time
 from database import DB
 
-SLEEP_SEC = 10
+SLEEP_SEC = 2
 
 def predict_based_on_coint(code, cls_code):
     pj = pandasjsm()
     target_code = []
     for c in code:
-        df = pj.get_historical_prices(c, start_date = datetime.date(2016,1,1))
+        df = pj.get_historical_prices(c, start_date = datetime.date(2017,1,1))
         # get rid of stocks, which only have low volume.
         if df.tail(1)['volume'][0] < 100000:
             continue
@@ -41,28 +41,26 @@ def predict_based_on_coint(code, cls_code):
 
     for c1, c2 in list(itertools.combinations(target_code, 2)):
         db = DB(c1)
-        df1 = db.select(table='code_{0}_0'.format(c1), start='2016-01-01 00:00:00')
+        df1 = db.select(table='code_{0}_0'.format(c1), start='2017-01-01 00:00:00')
         db = DB(c2)
-        df2 = db.select(table='code_{0}_0'.format(c2), start='2016-01-01 00:00:00')
+        df2 = db.select(table='code_{0}_0'.format(c2), start='2017-01-01 00:00:00')
 
         if len(df1['adj_close']) != len(df2['adj_close']):
             continue
+
         coint = stattools.coint(df1['adj_close'], df2['adj_close'], trend='ct')
-
-#        if coint[1] < 0.05:
-        if coint[1] < 0.30:
-
+        if coint[1] < 0.05:
             model = VECM(pd.concat([df1['adj_close'], df2['adj_close']], axis=1),
-                             deterministic="ci", seasons=4, coint_rank=1)
+                             deterministic="ci", coint_rank=1)
             vecm_res = model.fit()
-
             c1_latest = df1.tail(1).iloc[0]['adj_close']
             c2_latest = df2.tail(1).iloc[0]['adj_close']
-            if (vecm_res.predict(steps=1)[0][0] - c1_latest) - (vecm_res.predict(steps=1)[0][1] - c2_latest) > 0:
+            forecast, lower, upper = vecm_res.predict(steps=5, alpha=0.50)
+            if (lower[0][0] >= c1_latest) or (upper[0][1] <= c2_latest):
                 max_profit = 0
                 close_day = 0
-                for day, predict in enumerate(vecm_res.predict(steps=5)):
-                    profit = (vecm_res.beta[0] * (predict[0] - c1_latest)) + (vecm_res.beta[1] * (predict[1] - c2_latest))
+                for day, fc in enumerate(forecast):
+                    profit = (vecm_res.beta[0] * (fc[0] - c1_latest)) + (vecm_res.beta[1] * (fc[1] - c2_latest))
                     if profit > max_profit:
                         max_profit = profit
                         close_day = day
@@ -87,7 +85,7 @@ for cc in cls_code:
     th = threading.Thread(target=predict_based_on_coint, name='th', args=(brand[brand['class_code'] == cc]['ccode'], cc))
     threads.append(th)
     th.start()
-    time.sleep(SLEEP_SEC)
+#    time.sleep(SLEEP_SEC)
 
 for t in threads:
     t.join()
