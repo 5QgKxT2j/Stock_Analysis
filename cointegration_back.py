@@ -5,6 +5,9 @@ import warnings
 warnings.filterwarnings('ignore', category=FutureWarning, message=r'The pandas.core.datetools')
 warnings.filterwarnings('ignore', category=UserWarning, message=r'No parser')
 
+#background plot
+import matplotlib
+matplotlib.use("Agg")
 from pandasjsm import pandasjsm
 from analyzer import analyzer
 from statsmodels.tsa.vector_ar.vecm import VECM
@@ -22,18 +25,21 @@ from database import DB
 import matplotlib.pyplot as plt
 from dateutil.relativedelta import relativedelta
 import subprocess
+from concurrent.futures import ProcessPoolExecutor
 
 
 SLEEP_SEC = 2
 PROCESS = 4
 
-def predict_based_on_coint(code, cls_code, now):
+def predict_based_on_coint(code, cls_code, date, period=30):
     pj = pandasjsm()
     target_code = []
 
-    start_date = now - relativedelta(years=2)
+    start_date = date - relativedelta(days=period)
+    end_date = date
 
     ### ADF unit root test begins
+    """
     for c in code:
         df = pj.get_historical_prices(c, start_date = start_date.date())
         # get rid of stocks, which only have low volume.
@@ -46,14 +52,17 @@ def predict_based_on_coint(code, cls_code, now):
 
         time.sleep(SLEEP_SEC)
     print('class_code={0}: Now target_list is available'.format(cls_code))
+    """
     ### ADF unit root test ends
 
     ### cointegration test begins
     for c1, c2 in list(itertools.combinations(target_code, 2)):
         db = DB(c1)
-        df1 = db.select(table='code_{0}_0'.format(c1), start=start_date.strftime("%Y-%m-%d %H:%M:%S"))
+        df1 = db.select(table='code_{0}_0'.format(c1)
+        , start=start_date.strftime("%Y-%m-%d %H:%M:%S"), end=end_date.strftime("%Y-%m-%d %H:%M:%S"))
         db = DB(c2)
-        df2 = db.select(table='code_{0}_0'.format(c2), start=start_date.strftime("%Y-%m-%d %H:%M:%S"))
+        df2 = db.select(table='code_{0}_0'.format(c2)
+        , start=start_date.strftime("%Y-%m-%d %H:%M:%S"), end=end_date.strftime("%Y-%m-%d %H:%M:%S"))
 
         if len(df1['adj_close']) != len(df2['adj_close']):
             continue
@@ -84,19 +93,19 @@ def predict_based_on_coint(code, cls_code, now):
                 if profit_rate <= 0.01:
                     continue
 
-                with open('./coint_log/{0}_coint.txt'.format(now.strftime("%Y%m%d_%H%M")), 'a') as log:
-                    print('code, coint:', [c1, c2, coint[1]], '\n',
+                with open('./coint_log/{0}_coint.txt'.format(date.strftime("%Y%m%d_%H%M")), 'a') as log:
+                    log.write('code, coint:', [c1, c2, coint[1]], '\n',
                           forecast, '\n'
                           'Latest Price:', [df1.tail(1).iloc[0]['adj_close'], df2.tail(1).iloc[0]['adj_close']], '\n'
                           'VECM Beta:', beta1, beta2 , '\n'
                           'Expected Profit:', max_profit, profit_rate, '\n'
-                          'Close: in', close_day+1, 'steps\n' , file=log)
+                          'Close: in', close_day+1, 'steps\n')
                 # make a graph for a forecast and a cointegration series
                 vecm_res.plot_forecast(steps=30, n_last_obs=30)
-                plt.savefig("./figure/coint/{0}/forecast_{1}-{2}.png".format(now.strftime("%Y%m%d_%H%M"), c1, c2))
+                plt.savefig("./figure/coint/{0}/forecast_{1}-{2}.png".format(date.strftime("%Y%m%d_%H%M"), c1, c2))
                 plt.close()
                 coint_series.plot()
-                plt.savefig("./figure/coint/{0}/coint_series_{1}-{2}.png".format(now.strftime("%Y%m%d_%H%M"), c1, c2))
+                plt.savefig("./figure/coint/{0}/coint_series_{1}-{2}.png".format(date.strftime("%Y%m%d_%H%M"), c1, c2))
                 plt.close()
 
     ### cointegration test ends
@@ -109,15 +118,9 @@ if __name__ == '__main__':
     brand = pd.io.sql.read_sql(select, connect)
     cls_code = sorted(set(brand['class_code']), key=itemgetter(0))
 
-    now = datetime.datetime.now()
-    subprocess.call( ['mkdir', '-p', './figure/coint/{0}'.format(now.strftime("%Y%m%d_%H%M")) ])
-    threads = []
+    subprocess.call( ['mkdir', '-p', './figure/coint/{0}'.format(date.strftime("%Y%m%d_%H%M")) ])
+    _e = ProcessPoolExecutor(max_workers=PROCESS)
+    date=datetime.date(2017,8,1)
     for cc in cls_code:
-        th = threading.Thread(target=predict_based_on_coint, name='th', args=(brand[brand['class_code'] == cc]['ccode'], cc, now))
-        threads.append(th)
-        th.start()
-
-
-    for t in threads:
-        t.join()
+        _e.submit(predict_based_on_coint,brand[brand['class_code'] == cc]['ccode'], cc, date)
 
