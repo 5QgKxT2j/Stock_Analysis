@@ -5,6 +5,9 @@ import warnings
 warnings.filterwarnings('ignore', category=FutureWarning, message=r'The pandas.core.datetools')
 warnings.filterwarnings('ignore', category=UserWarning, message=r'No parser')
 
+#background plot
+import matplotlib
+matplotlib.use("Agg")
 from pandasjsm import pandasjsm
 from analyzer import analyzer
 from statsmodels.tsa.vector_ar.vecm import VECM
@@ -25,6 +28,7 @@ import subprocess
 
 
 SLEEP_SEC = 2
+PROCESS = 4
 
 def predict_based_on_coint(code, cls_code, now):
     pj = pandasjsm()
