@@ -22,7 +22,8 @@ from database import DB
 import matplotlib.pyplot as plt
 from dateutil.relativedelta import relativedelta
 import subprocess
-
+import talib
+import numpy as np
 
 SLEEP_SEC = 2
 
@@ -30,7 +31,7 @@ def predict_based_on_coint(code, cls_code, now):
     pj = pandasjsm()
     target_code = []
 
-    start_date = now - relativedelta(years=2)
+    start_date = now - relativedelta(years=1)
 
     ### ADF unit root test begins
     for c in code:
@@ -90,13 +91,19 @@ def predict_based_on_coint(code, cls_code, now):
                           'VECM Beta:', beta1, beta2 , '\n'
                           'Expected Profit:', max_profit, profit_rate, '\n'
                           'Close: in', close_day+1, 'steps\n' , file=log)
+
+
                 # make a graph for a forecast and a cointegration series
                 vecm_res.plot_forecast(steps=30, n_last_obs=30)
                 plt.savefig("./figure/coint/{0}/forecast_{1}-{2}.png".format(now.strftime("%Y%m%d_%H%M"), c1, c2))
                 plt.close()
-                coint_series.plot()
+
+                bupper, bmiddle, blower = talib.BBANDS(np.array(coint_series, dtype='f8'), timeperiod=25)
+                coint_series_res = pd.concat([pd.DataFrame(bupper), coint_series, pd.DataFrame(blower)], axis=1)
+                coint_series_res.plot()
                 plt.savefig("./figure/coint/{0}/coint_series_{1}-{2}.png".format(now.strftime("%Y%m%d_%H%M"), c1, c2))
                 plt.close()
+
 
     ### cointegration test ends
 
