@@ -28,7 +28,7 @@ class DB():
             elif (not start) and end: # 終了日のみ指定
                 sql_select = 'select distinct {col} from {table} where date <= "{e}" order by date'.format(table=table, col=','.join(col), e=end)
             elif start and end: # 取得開始日と終了日を共に指定
-                sql_select = 'select distinct * from stock_data where date between "{s}" and "{e}" order by date'.format(table=table, col=','.join(col), s=start, e=end)
+                sql_select = 'select distinct * from {table} where date between "{s}" and "{e}" order by date'.format(table=table, col=','.join(col), s=start, e=end)
 
         return psql.read_sql(sql_select, self.con)
 
